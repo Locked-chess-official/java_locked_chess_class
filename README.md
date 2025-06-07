@@ -109,6 +109,9 @@ Represents a chess piece with:
 - Coordinates (x, y)
 - Color ("黑" or "白")
 - Standard equals(), hashCode(), toString() implementations
+- `int getX()`: Get the X coordinate
+- `int getY()`: Get the Y coordinate
+- `String getColor()`: Get the color
 
 ### 5. Exception Classes
 Custom exceptions for game errors:
