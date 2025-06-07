@@ -80,6 +80,8 @@ Robot player interface:
 
 ### 3. Main Classes
 
+- private:
+
 #### LockedChess
 Implements LockedChessAllInterface with core game logic.
 
@@ -88,6 +90,14 @@ Extends LockedChess with recording capabilities (implements WriterLockedChessAll
 
 #### LockedChessRobot
 Implements LockedChessRobotAllInterface for AI player functionality.
+
+- public:
+
+#### LockedChessClass
+#### WriterLockedChessClass
+#### LockedChessRobotClass
+- `LockedChessRobotAllInterface LockedChessRobotClass()`: Return new LockedChessRobot.
+- `LockedChessRobotAllInterface LockedChessRobotClass(LockedChessAllInterface writerLockedChess)`: Return new LockedChessRobot and set the game.
 
 ### 4. Helper Classes
 
