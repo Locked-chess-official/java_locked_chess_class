@@ -93,13 +93,14 @@ Implements LockedChessRobotAllInterface for AI player functionality.
 
 #### AllRecords
 Manages game records storage:
-- `addRecord()`: Adds a record
-- `writeRecords()`: Writes records to file
-- `readRecords()`: Reads records from file
-- `deleteRecord()`: Deletes a record
-- `getRecords()`: Gets all records
-- `readRecord()`: Translates record format
-- `combineRecord()`: Combines records
+- `void addRecord(WriterLockedChessAllInterface writerLockedChess, String name)`: Adds a record from one game with a name.
+- `void addRecord(WriterLockedChessAllInterface writerLockedChess)`: Adds a record from one game without a name.
+- `void writeRecords(String filePath)`: Writes records to file
+- `void readRecords(String filePath)`: Reads records from file
+- `void deleteRecord(String recordTime, boolean isTime)`: Deletes a record. If "isTime" is true, the record is just the time, or it is time + "\\u2003" + name.
+- `String getRecords()`: Gets all records.
+- `String readRecord(String boardRecord, String operationRecord, String timeRecord)`: Translates record format.
+- `void combineRecord()`: Combines records from OtherRecords.
 
 #### OtherRecords
 Manages additional records storage with similar methods to AllRecords.
