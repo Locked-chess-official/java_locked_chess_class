@@ -120,7 +120,7 @@ Custom exceptions for game errors:
 - GameIsNotOverError (in WriterLockedChess)
 
 ## Game Rules
-1. The game alternates between black ("黑") and white ("白") players
+1. The game alternates between black ("黑") and white ("白") players every 5 operations
 2. Players move pieces in specific directions ("u", "d", "l", "r")
 3. Movement is constrained by board boundaries and opponent pieces
 4. The game ends when a player cannot make a legal move
