@@ -142,6 +142,8 @@ public class LockedChessCentre {
 
         // 将当前游戏记录写入记录文件，不指定名称
         public void writeToRecord();
+
+        public boolean getProtect();
     }
 
     public static final class AllRecords {
@@ -709,6 +711,11 @@ public class LockedChessCentre {
         @Override
         public void writeToRecord() {
             writerLockedChess.writeToRecord();
+        }
+
+        @Override
+        public boolean getProtect() {
+            return writerLockedChess.getProtect();
         }
     }
 
@@ -1845,6 +1852,16 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
     @Override
     public void writeToRecord() {
         writeToRecord("");
+    }
+
+    @Override
+    public boolean getProtect() {
+        lock.lock();
+        try {
+            return isProtected;
+        } finally {
+            lock.unlock();
+        }
     }
 }
 
