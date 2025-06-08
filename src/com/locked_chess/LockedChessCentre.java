@@ -1,17 +1,17 @@
 package com.locked_chess;
 // LockedChessCentre.java
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.io.FileWriter;
-import java.io.FileReader;
-import java.io.IOException;
 
 public class LockedChessCentre {
     public static interface LockedChessAllInterface {
@@ -167,7 +167,7 @@ public class LockedChessCentre {
             try (FileWriter writer = new FileWriter(filePath)) {
                 writer.write(allRecords.toString(2));
             } catch (IOException e) {
-                throw e;
+                throw new IOException(e.getMessage() + "please check the path");
             }
         }
 
@@ -200,7 +200,12 @@ public class LockedChessCentre {
             return allRecords.toString();
         }
 
+        private static final Map<String, String> getRecordsCache = new HashMap<>();
+
         public static String readRecord(String boardRecord, String operationRecord, String timeRecord) {
+            if (getRecordsCache.containsKey(boardRecord + '&' + operationRecord + '&' + timeRecord)) {
+                return getRecordsCache.get(boardRecord + '&' + operationRecord + '&' + timeRecord);
+            }
             // 翻译记录
             String[] boardArray = boardRecord.split("#");
             String[] operationArray = operationRecord.split("#");
@@ -230,6 +235,7 @@ public class LockedChessCentre {
                 result.put(String.valueOf(i), oneStep);
             }
             result.put("step_number", i - 1);
+            getRecordsCache.put(boardRecord + '&' + operationRecord + '&' + timeRecord, result.toString());
             return result.toString();
         }
 
@@ -268,7 +274,7 @@ public class LockedChessCentre {
             return hasCombined;
         }
 
-        protected static void setHasCombined(boolean hasCombined) {
+        static void setHasCombined(boolean hasCombined) {
             OtherRecords.hasCombined = hasCombined;
         }
     }
@@ -1177,7 +1183,7 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
                 throw new GameIsOverError(msg);
             }
 
-            if (x instanceof String && ((String) x).equals("c")) {
+            if (x instanceof String && (x).equals("c")) {
                 handleCancelOperation();
                 return;
             }
@@ -1193,8 +1199,11 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             }
 
             if (operationNumber == 1 || operationNumber == 2 || operationNumber == 4 || operationNumber == 5) {
-                String direction = (String) x;
-                changeGame(direction);
+                if (x instanceof String string) {
+                    changeGame(string);
+                } else {
+                    throw new IllegalArgumentException("Operation must be string if the operation number in (1,2,4,5)");
+                }
             } else if (operationNumber == 3) {
                 chooseChessLocate = (ChessPiece) x;
             }
@@ -1463,21 +1472,28 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     }
 
     // Calculate all possible operation chains
+
+    private static final Map<String, List<List<Object>>> chainCache = new HashMap<>();
+
     @Override
     public List<List<Object>> calculateAllChains() {
         lock.lock();
         try {
+            inDfs = true;
+            if (chainCache.containsKey(returnGame())) {
+                return chainCache.get(returnGame());
+            }
             String initialState = returnGame();
             int requiredSteps = 6 - operationNumber;
 
             Set<String> visited = new HashSet<>();
             List<List<Object>> chains = new ArrayList<>();
-            inDfs = true;
             dfs(initialState, new ArrayList<>(), visited, chains, requiredSteps);
-            inDfs = false;
-            return chains;
+            chainCache.put(initialState, chains);
+            return new ArrayList<>(chains);
         } finally {
             lock.unlock();
+            inDfs = false;
         }
     }
 
@@ -1502,18 +1518,18 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             return;
         }
 
-        Object legalOps = legalOperation();
-        if (legalOps.equals("fail") || path.size() >= requiredSteps + 5) {
+        List<Object> legalOps = legalOperation();
+        if (legalOps.isEmpty() || path.size() >= requiredSteps + 5) {
             return;
         }
 
-        for (Object op : (List<?>) legalOps) {
+        for (Object op : legalOps) {
             String prevState = returnGame();
             try {
                 startOperation(op);
                 path.add(op);
                 dfs(returnGame(), path, visited, chains, requiredSteps);
-                path.remove(path.size() - 1);
+                path.removeLast();
             } finally {
                 loadsGame(prevState);
             }
@@ -1551,6 +1567,7 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     private String applyChain(List<Object> chain) {
         String initialState = returnGame();
         try {
+            inDfs = true;
             for (Object op : chain) {
                 startOperation(op);
             }
@@ -1559,6 +1576,7 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             loadsGame(initialState);
             throw new IllegalChainError("Invalid chain for this game state");
         } finally {
+            inDfs = false;
             loadsGame(initialState);
         }
     }
@@ -1652,7 +1670,7 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
 
 class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterLockedChessAllInterface {
 
-    public class GameIsNotOverError extends RuntimeException {
+    public static class GameIsNotOverError extends RuntimeException {
 
         public GameIsNotOverError(String message) {
             super(message);
@@ -1664,24 +1682,20 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
     private StringBuilder operationString;
     private StringBuilder timeString;
     private String startTime;
-    private String endTime;
     private long lastOperationTime;
-    private final Map<Integer, String> dictMap = Collections.unmodifiableMap(new HashMap<Integer, String>() {
-        {
-            put(1, "1");
-            put(2, "2");
-            put(3, "3");
-            put(4, "4");
-            put(5, "5");
-            put(6, "6");
-            put(7, "7");
-            put(8, "8");
-            put(9, "9");
-            put(10, "A");
-            put(11, "B");
-            put(12, "C");
-        }
-    });
+    private final Map<Integer, String> dictMap = Map.ofEntries(
+            Map.entry(1, "1"),
+            Map.entry(2, "2"),
+            Map.entry(3, "3"),
+            Map.entry(4, "4"),
+            Map.entry(5, "5"),
+            Map.entry(6, "6"),
+            Map.entry(7, "7"),
+            Map.entry(8, "8"),
+            Map.entry(9, "9"),
+            Map.entry(10, "A"),
+            Map.entry(11, "B"),
+            Map.entry(12, "C"));
 
     /*
      * All end strings
@@ -1777,12 +1791,12 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
                 operationString.append("#");
                 long nextOperationTime = System.currentTimeMillis();
                 timeString.append(
-                        String.format("%.3f", (double) (nextOperationTime - lastOperationTime) / (double) 1000.0))
+                        String.format("%.3f", (double) (nextOperationTime - lastOperationTime) / 1000.0))
                         .append("#");
                 boardString.append('#').append(return_game());
                 lastOperationTime = nextOperationTime;
                 if (legalOperation().isEmpty()) {
-                    endTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    String endTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     timeString.append(startTime).append('$').append(endTime);
                     if (getOperationOppsite().equals("黑")) {
                         operationString.append("ww");
@@ -1930,8 +1944,8 @@ class LockedChessRobot implements LockedChessCentre.LockedChessRobotAllInterface
                 }
 
             }
-            Integer minusX = Collections.max(allX) - Collections.min(allX);
-            Integer minusY = Collections.max(allY) - Collections.min(allY);
+            int minusX = Collections.max(allX) - Collections.min(allX);
+            int minusY = Collections.max(allY) - Collections.min(allY);
             return minusX >= 11 || minusY >= 11;
         } catch (Exception e) {
             // If any error occurs, treat it as a failure
@@ -2015,12 +2029,10 @@ class LockedChessRobot implements LockedChessCentre.LockedChessRobotAllInterface
                 if (justWin(returnChain)) {
                     if (!usebetter) {
                         return returnChain;
-                    } else {
                     }
                 } else {
                     if (usebetter) {
                         return returnChain;
-                    } else {
                     }
                 }
 
