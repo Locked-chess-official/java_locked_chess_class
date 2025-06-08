@@ -149,3 +149,8 @@ Game state is represented as JSON with:
 - `choose_chess_locate`: Selected piece coordinates and color
 - `all_operation`: List of valid operations
        
+# Change
+## 2025.6.8
+
+- Fix some bug.
+- Use cache to speed up.
