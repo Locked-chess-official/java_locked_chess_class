@@ -114,7 +114,10 @@ Manages game records storage:
 - `void combineRecord()`: Combines records from OtherRecords.
 
 #### OtherRecords
-Manages additional records storage with similar methods to AllRecords.
+Manages additional records storage with similar methods to AllRecords:
+- `void readRecords(String filePath)`: Reads records from file.
+- `String getRecords()`: Gets all records.
+- `boolean getHasCombined()`: Gets whether the records have been combined to AllRecords.
 
 #### ChessPiece
 Represents a chess piece with:
