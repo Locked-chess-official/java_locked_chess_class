@@ -9,7 +9,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1992,6 +1991,43 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
         lock.lock();
         try {
             return isProtected;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public List<List<Object>> calculateAllChains() {
+        lock.lock();
+        try {
+            boolean originalProtected = isProtected;
+            setUnprotect(); // Temporarily unprotect to allow chain calculation
+            try {
+                return super.calculateAllChains();
+            } finally {
+                if (originalProtected) {
+                    setProtect(); // Restore protection state
+                }
+            }
+
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public boolean isEqualChain(List<Object> chain1, List<Object> chain2) {
+        lock.lock();
+        try {
+            boolean originalProtected = isProtected;
+            setUnprotect(); // Temporarily unprotect to allow chain comparison
+            try {
+                return super.isEqualChain(chain1, chain2);
+            } finally {
+                if (originalProtected) {
+                    setProtect(); // Restore protection state
+                }
+            }
         } finally {
             lock.unlock();
         }
