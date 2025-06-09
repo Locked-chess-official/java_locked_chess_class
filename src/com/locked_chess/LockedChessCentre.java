@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -204,10 +206,16 @@ public class LockedChessCentre {
         }
 
         private static final Map<String, String> getRecordsCache = new HashMap<>();
+        private static final ReentrantReadWriteLock getRecordCacheLock = new ReentrantReadWriteLock();
 
         public static String readRecord(String boardRecord, String operationRecord, String timeRecord) {
-            if (getRecordsCache.containsKey(boardRecord + '&' + operationRecord + '&' + timeRecord)) {
-                return getRecordsCache.get(boardRecord + '&' + operationRecord + '&' + timeRecord);
+            getRecordCacheLock.readLock().lock();
+            try {
+                if (getRecordsCache.containsKey(boardRecord + '&' + operationRecord + '&' + timeRecord)) {
+                    return getRecordsCache.get(boardRecord + '&' + operationRecord + '&' + timeRecord);
+                }
+            } finally {
+                getRecordCacheLock.readLock().unlock();
             }
             // 翻译记录
             String[] boardArray = boardRecord.split("#");
@@ -238,8 +246,13 @@ public class LockedChessCentre {
                 result.put(String.valueOf(i), oneStep);
             }
             result.put("step_number", i - 1);
-            getRecordsCache.put(boardRecord + '&' + operationRecord + '&' + timeRecord, result.toString());
-            return result.toString();
+            getRecordCacheLock.writeLock().lock();
+            try {
+                getRecordsCache.put(boardRecord + '&' + operationRecord + '&' + timeRecord, result.toString());
+                return result.toString();
+            } finally {
+                getRecordCacheLock.writeLock().unlock();
+            }
         }
 
         public static void combineRecord() {
@@ -1482,14 +1495,20 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     // Calculate all possible operation chains
 
     private static final Map<String, List<List<Object>>> chainCache = new HashMap<>();
+    private static final ReentrantReadWriteLock chainCacheLock = new ReentrantReadWriteLock();
 
     @Override
     public List<List<Object>> calculateAllChains() {
         lock.lock();
         try {
             inDfs = true;
-            if (chainCache.containsKey(returnGame())) {
-                return new ArrayList<>(chainCache.get(returnGame()));
+            chainCacheLock.readLock().lock();
+            try {
+                if (chainCache.containsKey(returnGame())) {
+                    return new ArrayList<>(chainCache.get(returnGame()));
+                }
+            } finally {
+                chainCacheLock.readLock().unlock();
             }
             String initialState = returnGame();
             int requiredSteps = 6 - operationNumber;
@@ -1497,7 +1516,12 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             Set<String> visited = new HashSet<>();
             List<List<Object>> chains = new ArrayList<>();
             dfs(initialState, new ArrayList<>(), visited, chains, requiredSteps);
-            chainCache.put(initialState, chains);
+            chainCacheLock.writeLock().lock();
+            try {
+                chainCache.put(initialState, chains);
+            } finally {
+                chainCacheLock.writeLock().unlock();
+            }
             return new ArrayList<>(chains);
         } finally {
             lock.unlock();
@@ -1691,7 +1715,7 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
     private StringBuilder timeString;
     private String startTime;
     private long lastOperationTime;
-    private final Map<Integer, String> dictMap = Map.ofEntries(
+    private static final Map<Integer, String> dictMap = Map.ofEntries(
             Map.entry(1, "1"),
             Map.entry(2, "2"),
             Map.entry(3, "3"),
@@ -1715,7 +1739,7 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
      * wo: white out of time
      * pp: peace
      */
-    private final List<String> allEndString = Arrays.asList(
+    private static final List<String> allEndString = Arrays.asList(
             "bw", "ww", "bf", "wf", "bo", "wo", "pp");
 
     private boolean isEnd(String result) {
