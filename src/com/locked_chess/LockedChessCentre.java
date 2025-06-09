@@ -1778,6 +1778,10 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
             if (operation == null) {
                 throw new IllegalOperationError("Operation cannot be null");
             }
+            if (inPeace && ((operation instanceof String && (!operation.equals("y") && !operation.equals("n")))
+                    || !(operation instanceof String))) {
+                throw new IllegalOperationError("You can't use this operation when in peace.");
+            }
             if ((operation instanceof String) && (operation.equals('f')
                     || operation.equals('o') || operation.equals('p') || operation.equals('y')
                     || operation.equals('n'))) {
