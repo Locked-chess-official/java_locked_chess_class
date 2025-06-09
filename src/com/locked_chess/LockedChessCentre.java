@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+@SuppressWarnings("ALL")
 public class LockedChessCentre {
     public static interface LockedChessAllInterface {
         // 开始游戏的方法
@@ -1778,13 +1779,12 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
             if (operation == null) {
                 throw new IllegalOperationError("Operation cannot be null");
             }
-            if (inPeace && ((operation instanceof String && (!operation.equals("y") && !operation.equals("n")))
-                    || !(operation instanceof String))) {
+            if (inPeace && (!(operation instanceof String) || (!operation.equals("y") && !operation.equals("n")))) {
                 throw new IllegalOperationError("You can't use this operation when in peace.");
             }
-            if ((operation instanceof String) && (operation.equals('f')
-                    || operation.equals('o') || operation.equals('p') || operation.equals('y')
-                    || operation.equals('n'))) {
+            if ((operation instanceof String) && (operation.equals("f")
+                    || operation.equals("o") || operation.equals("p") || operation.equals("y")
+                    || operation.equals("n"))) {
                 handleOtherOperation((String) operation);
                 return;
             }
@@ -1799,8 +1799,8 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
 
                 switch (operation) {
                     case LockedChess.ChessPiece chessPiece ->
-                        operationString.append(dictMap.get(((ChessPiece) chessPiece).getX()))
-                                .append(dictMap.get(((ChessPiece) chessPiece).getY()));
+                        operationString.append(dictMap.get(chessPiece.getX()))
+                                .append(dictMap.get(chessPiece.getY()));
                     case String string -> {
                         if (getOperationNumber() == 4) {
                             String[] parts = string.split(",");
@@ -1891,9 +1891,7 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
                 normalWrite();
                 inPeace = false;
             }
-            default -> {
-                throw new AssertionError();
-            }
+            default -> throw new AssertionError();
         }
     }
 
