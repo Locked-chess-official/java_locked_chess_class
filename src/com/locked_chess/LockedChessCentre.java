@@ -205,13 +205,49 @@ public class LockedChessCentre {
         }
 
         private static final Map<String, String> getRecordsCache = new HashMap<>();
+        private static final Map<String, Integer> getRecordsCacheCount = new HashMap<>();
+        private static final Map<String, Long> getRecordsCacheTime = new HashMap<>();
+        private static final ReentrantReadWriteLock getRecordsCacheLock = new ReentrantReadWriteLock();
         private static final ReentrantReadWriteLock getRecordCacheLock = new ReentrantReadWriteLock();
+
+        static void clearReadRecordsCache() {
+            getRecordCacheLock.writeLock().lock();
+            getRecordsCacheLock.writeLock().lock();
+            try {
+                List<String> keysToRemove = new ArrayList<>(getRecordsCache.keySet());
+                for (String key : keysToRemove) {
+                    if (getRecordsCacheCount.get(key) < 10 && System.currentTimeMillis()
+                            - getRecordsCacheTime.get(key) > 60000) {
+                        getRecordsCache.remove(key);
+                        getRecordsCacheCount.remove(key);
+                        getRecordsCacheTime.remove(key);
+                    }
+                }
+            } finally {
+                getRecordCacheLock.writeLock().unlock();
+                getRecordsCacheLock.writeLock().unlock();
+            }
+        }
 
         public static String readRecord(String boardRecord, String operationRecord, String timeRecord) {
             getRecordCacheLock.readLock().lock();
             try {
                 if (getRecordsCache.containsKey(boardRecord + '&' + operationRecord + '&' + timeRecord)) {
-                    return getRecordsCache.get(boardRecord + '&' + operationRecord + '&' + timeRecord);
+                    getRecordsCacheLock.writeLock().lock();
+                    try {
+                        if (getRecordsCacheCount.containsKey(boardRecord + '&' + operationRecord + '&' + timeRecord)) {
+                            getRecordsCacheCount.put(boardRecord + '&' + operationRecord + '&' + timeRecord,
+                                    getRecordsCacheCount.get(boardRecord + '&' + operationRecord + '&' + timeRecord)
+                                            + 1);
+                        } else {
+                            getRecordsCacheCount.put(boardRecord + '&' + operationRecord + '&' + timeRecord, 1);
+                        }
+                        getRecordsCacheTime.put(boardRecord + '&' + operationRecord + '&' + timeRecord,
+                                System.currentTimeMillis());
+                        return getRecordsCache.get(boardRecord + '&' + operationRecord + '&' + timeRecord);
+                    } finally {
+                        getRecordsCacheLock.writeLock().unlock();
+                    }
                 }
             } finally {
                 getRecordCacheLock.readLock().unlock();
@@ -247,8 +283,21 @@ public class LockedChessCentre {
             result.put("step_number", i - 1);
             getRecordCacheLock.writeLock().lock();
             try {
-                getRecordsCache.put(boardRecord + '&' + operationRecord + '&' + timeRecord, result.toString());
-                return result.toString();
+                getRecordsCacheLock.writeLock().lock();
+                try {
+                    if (getRecordsCacheCount.containsKey(boardRecord + '&' + operationRecord + '&' + timeRecord)) {
+                        getRecordsCacheCount.put(boardRecord + '&' + operationRecord + '&' + timeRecord,
+                                getRecordsCacheCount.get(boardRecord + '&' + operationRecord + '&' + timeRecord) + 1);
+                    } else {
+                        getRecordsCacheCount.put(boardRecord + '&' + operationRecord + '&' + timeRecord, 1);
+                    }
+                    getRecordsCacheTime.put(boardRecord + '&' + operationRecord + '&' + timeRecord,
+                            System.currentTimeMillis());
+                    getRecordsCache.put(boardRecord + '&' + operationRecord + '&' + timeRecord, result.toString());
+                    return result.toString();
+                } finally {
+                    getRecordsCacheLock.writeLock().unlock();
+                }
             } finally {
                 getRecordCacheLock.writeLock().unlock();
             }
@@ -264,6 +313,10 @@ public class LockedChessCentre {
             }
             OtherRecords.setHasCombined(true);
         }
+    }
+
+    public static void clearReadRecordsCache() {
+        AllRecords.clearReadRecordsCache();
     }
 
     public static final class OtherRecords {
@@ -755,6 +808,14 @@ public class LockedChessCentre {
     public static void setGame(LockedChessAllInterface writerLockedChess) {
         robot.setGame(writerLockedChess);
     }
+
+    public static void cleanLegalOperationCache() {
+        LockedChess.cleanLegalOperationCache();
+    }
+
+    public static void cleanChainCache() {
+        LockedChess.cleanChainCache();
+    }
 }
 
 class LockedChess implements LockedChessCentre.LockedChessAllInterface {
@@ -889,7 +950,29 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     }
 
     private static final Map<String, List<Object>> legalOperationCache = new HashMap<>();
+    private static final Map<String, Integer> legalOperationCacheCount = new HashMap<>();
+    private static final Map<String, Long> legalOperationCacheTime = new HashMap<>();
+    private static final ReentrantReadWriteLock legalOperationCacheCountLock = new ReentrantReadWriteLock();
     private static final ReentrantReadWriteLock legalOperationCacheLock = new ReentrantReadWriteLock();
+
+    static void cleanLegalOperationCache() {
+        legalOperationCacheLock.writeLock().lock();
+        legalOperationCacheCountLock.writeLock().lock();
+        try {
+            List<String> keysToRemove = new ArrayList<>(legalOperationCache.keySet());
+            for (String key : keysToRemove) {
+                if (System.currentTimeMillis() - legalOperationCacheTime.get(key) > 60000 &&
+                        legalOperationCacheCount.get(key) < 10) {
+                    legalOperationCache.remove(key);
+                    legalOperationCacheCount.remove(key);
+                    legalOperationCacheTime.remove(key);
+                }
+            }
+        } finally {
+            legalOperationCacheCountLock.writeLock().unlock();
+            legalOperationCacheLock.writeLock().unlock();
+        }
+    }
 
     // Get legal operations
     @Override
@@ -900,7 +983,19 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             try {
                 if (legalOperationCache.containsKey(returnGameWithoutAllOperation())) {
                     allOperation = new ArrayList<>(legalOperationCache.get(returnGameWithoutAllOperation()));
-                    return new ArrayList<>(allOperation);
+                    legalOperationCacheCountLock.writeLock().lock();
+                    try {
+                        if (legalOperationCacheCount.containsKey(returnGameWithoutAllOperation())) {
+                            legalOperationCacheCount.put(returnGameWithoutAllOperation(),
+                                    legalOperationCacheCount.get(returnGameWithoutAllOperation()) + 1);
+                        } else {
+                            legalOperationCacheCount.put(returnGameWithoutAllOperation(), 1);
+                        }
+                        legalOperationCacheTime.put(returnGameWithoutAllOperation(), System.currentTimeMillis());
+                        return new ArrayList<>(allOperation);
+                    } finally {
+                        legalOperationCacheCountLock.writeLock().unlock();
+                    }
                 }
             } finally {
                 legalOperationCacheLock.readLock().unlock();
@@ -998,6 +1093,19 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             legalOperationCacheLock.writeLock().lock();
             try {
                 legalOperationCache.put(returnGameWithoutAllOperation(), new ArrayList<>(allOperation));
+                legalOperationCacheCountLock.writeLock().lock();
+                try {
+                    if (legalOperationCacheCount.containsKey(returnGameWithoutAllOperation())) {
+                        legalOperationCacheCount.put(returnGameWithoutAllOperation(),
+                                legalOperationCacheCount.get(returnGameWithoutAllOperation()) + 1);
+                    } else {
+                        legalOperationCacheCount.put(returnGameWithoutAllOperation(), 1);
+                    }
+                    legalOperationCacheTime.put(returnGameWithoutAllOperation(),
+                            System.currentTimeMillis());
+                } finally {
+                    legalOperationCacheCountLock.writeLock().unlock();
+                }
             } finally {
                 legalOperationCacheLock.writeLock().unlock();
             }
@@ -1544,7 +1652,29 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     // Calculate all possible operation chains
 
     private static final Map<String, List<List<Object>>> chainCache = new HashMap<>();
+    private static final Map<String, Integer> chainCacheCount = new HashMap<>();
+    private static final Map<String, Long> chainCacheTime = new HashMap<>();
+    private static final ReentrantReadWriteLock chainCacheCountLock = new ReentrantReadWriteLock();
     private static final ReentrantReadWriteLock chainCacheLock = new ReentrantReadWriteLock();
+
+    static void cleanChainCache() {
+        chainCacheLock.writeLock().lock();
+        chainCacheCountLock.writeLock().lock();
+        try {
+            List<String> keysToRemove = new ArrayList<>(chainCache.keySet());
+            for (String key : keysToRemove) {
+                if (System.currentTimeMillis() - chainCacheTime.get(key) > 60000 &&
+                        chainCacheCount.get(key) < 10) {
+                    chainCache.remove(key);
+                    chainCacheCount.remove(key);
+                    chainCacheTime.remove(key);
+                }
+            }
+        } finally {
+            chainCacheCountLock.writeLock().unlock();
+            chainCacheLock.writeLock().unlock();
+        }
+    }
 
     @Override
     public List<List<Object>> calculateAllChains() {
@@ -1554,6 +1684,17 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             chainCacheLock.readLock().lock();
             try {
                 if (chainCache.containsKey(returnGame())) {
+                    chainCacheCountLock.writeLock().lock();
+                    try {
+                        if (chainCacheCount.containsKey(returnGame())) {
+                            chainCacheCount.put(returnGame(), chainCacheCount.get(returnGame()) + 1);
+                        } else {
+                            chainCacheCount.put(returnGame(), 1);
+                        }
+                        chainCacheTime.put(returnGame(), System.currentTimeMillis());
+                    } finally {
+                        chainCacheCountLock.writeLock().unlock();
+                    }
                     return new ArrayList<>(chainCache.get(returnGame()));
                 }
             } finally {
@@ -1568,6 +1709,17 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
             chainCacheLock.writeLock().lock();
             try {
                 chainCache.put(initialState, chains);
+                chainCacheCountLock.writeLock().lock();
+                try {
+                    if (chainCacheCount.containsKey(initialState)) {
+                        chainCacheCount.put(initialState, chainCacheCount.get(initialState) + 1);
+                    } else {
+                        chainCacheCount.put(initialState, 1);
+                    }
+                    chainCacheTime.put(initialState, System.currentTimeMillis());
+                } finally {
+                    chainCacheCountLock.writeLock().unlock();
+                }
             } finally {
                 chainCacheLock.writeLock().unlock();
             }
