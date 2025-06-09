@@ -11,6 +11,8 @@ To use it, you need to:
 
 ### 1. LockedChessCentre
 This is the central class containing all interfaces and implementations for the "locked chess" game.
+The interfaces, public classes and the public functions that don't belong the classes or interfaces are
+belong to `LockedChessCentre`
 
 ### 2. Interfaces
 
@@ -96,8 +98,11 @@ Implements LockedChessRobotAllInterface for AI player functionality.
 - public:
 
 #### LockedChessClass
+Public class `LockedChessClass`
 #### WriterLockedChessClass
+Public class `WriterLockedChessClass`
 #### LockedChessRobotClass
+Method `LockedChessRobotClass`
 - `LockedChessRobotAllInterface LockedChessRobotClass()`: Return new LockedChessRobot.
 - `LockedChessRobotAllInterface LockedChessRobotClass(LockedChessAllInterface writerLockedChess)`: Return new LockedChessRobot and set the game.
 
@@ -129,7 +134,14 @@ Represents a chess piece with:
 - `int getY()`: Get the Y coordinate
 - `String getColor()`: Get the color
 
-### 5. Exception Classes
+### 5. Cache Manager
+Some methods use cache to speed up. The add of the cache is automatic, but the clean should be manual.
+The cache will be clear if the used count is below 10 and the time of last using is above 60 seconds. 
+- `void clearReadRecordsCache()`: Clean the cache of `AllRecords.readRecord`
+- `void cleanLegalOperationCache()`: Clean the cache of `LockedChess.legalOperation`
+- `void cleanChainCache()`: Clean the cache of `LockedChess.calculateAllChains`
+
+### 6. Exception Classes
 Custom exceptions for game errors:
 - GameHasNotStartedError
 - IllegalLocationError
