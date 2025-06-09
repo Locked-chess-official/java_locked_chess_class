@@ -333,7 +333,7 @@ public class LockedChessCentre {
 
     public static LockedChessRobotAllInterface LockedChessRobotClass(LockedChessAllInterface writerLockedChess) {
         LockedChessRobot result = new LockedChessRobot();
-        result.setGame((LockedChess) writerLockedChess);
+        result.setGame(writerLockedChess);
         return result;
     }
 
@@ -888,11 +888,23 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
         gameStart();
     }
 
+    private static final Map<String, List<Object>> legalOperationCache = new HashMap<>();
+    private static final ReentrantReadWriteLock legalOperationCacheLock = new ReentrantReadWriteLock();
+
     // Get legal operations
     @Override
     public List<Object> legalOperation() {
         lock.lock();
         try {
+            legalOperationCacheLock.readLock().lock();
+            try {
+                if (legalOperationCache.containsKey(returnGameWithoutAllOperation())) {
+                    allOperation = new ArrayList<>(legalOperationCache.get(returnGameWithoutAllOperation()));
+                    return new ArrayList<>(allOperation);
+                }
+            } finally {
+                legalOperationCacheLock.readLock().unlock();
+            }
             allOperation = new ArrayList<>();
 
             // Check game state validity
@@ -982,6 +994,12 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
                 }
                 default -> {
                 }
+            }
+            legalOperationCacheLock.writeLock().lock();
+            try {
+                legalOperationCache.put(returnGameWithoutAllOperation(), new ArrayList<>(allOperation));
+            } finally {
+                legalOperationCacheLock.writeLock().unlock();
             }
             return new ArrayList<>(allOperation);
         } finally {
@@ -1382,6 +1400,38 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
         return returnGame();
     }
 
+    private String returnGameWithoutAllOperation() {
+        lock.lock();
+        try {
+            int[][] state = new int[12][12];
+            for (ChessPiece piece : game) {
+                int row = piece.y - 1;
+                int col = piece.x - 1;
+                state[row][col] = piece.color.equals("黑") ? 1 : -1;
+            }
+            JSONObject json = new JSONObject();
+            json.put("all_locate", new JSONArray(state));
+            json.put("operation_number", operationNumber);
+            json.put("operation_oppsite", operationOppsite);
+            json.put("operation_last_direction", operationLastDirection);
+
+            if (chooseChessLocate != null) {
+                json.put("choose_chess_locate",
+                        new JSONArray(Arrays.asList(
+                                chooseChessLocate.x,
+                                chooseChessLocate.y,
+                                chooseChessLocate.color)));
+            } else {
+                json.put("choose_chess_locate", new JSONArray(Arrays.asList(-1, -1, "无")));
+            }
+
+            return json.toString();
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
     // Load game state from JSON string
     @Override
     public void loadsGame(String x, boolean restart_game) {
@@ -1536,33 +1586,34 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     private void dfs(String stateJson, List<Object> path, Set<String> visited,
             List<List<Object>> chains, int requiredSteps) {
 
-        loadsGame(stateJson);
-        String stateKey = getStateKey();
+        LockedChess temp = new LockedChess();
+        temp.loadsGame(stateJson);
 
-        if (visited.contains(stateKey)) {
+        String stateKey = temp.getStateKey();
+        if (visited.contains(stateKey))
             return;
-        }
         visited.add(stateKey);
 
-        if (operationNumber == 1 && path.size() >= requiredSteps) {
+        if (temp.getOperationNumber() == 1 && path.size() >= requiredSteps) {
             chains.add(new ArrayList<>(path.subList(0, requiredSteps)));
             return;
         }
 
-        List<Object> legalOps = legalOperation();
-        if (legalOps.isEmpty() || path.size() >= requiredSteps + 5) {
+        List<Object> legalOps = temp.legalOperation();
+        if (legalOps.isEmpty() || path.size() >= requiredSteps + 5)
             return;
-        }
 
         for (Object op : legalOps) {
-            String prevState = returnGame();
+            LockedChess nextState = new LockedChess();
+            nextState.loadsGame(stateJson);
             try {
-                startOperation(op);
+                nextState.startOperation(op);
                 path.add(op);
-                dfs(returnGame(), path, visited, chains, requiredSteps);
+                dfs(nextState.returnGame(), path, visited, chains, requiredSteps);
                 path.removeLast();
-            } finally {
-                loadsGame(prevState);
+            } catch (Exception e) {
+                // 跳过非法操作分支
+                // 这里不需要处理异常，因为已经在dfs方法中处理了
             }
         }
     }
