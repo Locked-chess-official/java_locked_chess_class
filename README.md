@@ -70,7 +70,8 @@ Adds recording functionality:
 - `String get_final_result()`: Alias for getFinalResult()
 - `void writeToRecord(String name)`: Writes game record with name
 - `void writeToRecord()`: Writes game record without name
-- `boolean getProtect()`: Get whether it is protected.
+- `boolean getProtect()`: Get whether it is protected
+- `boolean getPeace()`: Get whether one player have requested to peace and other makes no response
 
 #### LockedChessRobotAllInterface
 Robot player interface:
@@ -157,3 +158,8 @@ Game state is represented as JSON with:
 
 - Fix some bug.
 - Use cache to speed up.
+
+## 2025.6.9
+
+- Fix some bug.
+- `WriterLockedChess` now support more operations.
