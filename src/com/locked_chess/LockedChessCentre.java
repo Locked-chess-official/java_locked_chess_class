@@ -216,7 +216,11 @@ public class LockedChessCentre {
             try {
                 List<String> keysToRemove = new ArrayList<>(getRecordsCache.keySet());
                 for (String key : keysToRemove) {
-                    if (getRecordsCacheCount.get(key) < 10 && System.currentTimeMillis()
+                    if (!getRecordsCacheCount.containsKey(key) || !getRecordsCacheTime.containsKey(key)) {
+                        getRecordsCache.remove(key);
+                        getRecordsCacheCount.remove(key);
+                        getRecordsCacheTime.remove(key);
+                    } else if (getRecordsCacheCount.get(key) < 10 && System.currentTimeMillis()
                             - getRecordsCacheTime.get(key) > 60000) {
                         getRecordsCache.remove(key);
                         getRecordsCacheCount.remove(key);
@@ -961,8 +965,12 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
         try {
             List<String> keysToRemove = new ArrayList<>(legalOperationCache.keySet());
             for (String key : keysToRemove) {
-                if (System.currentTimeMillis() - legalOperationCacheTime.get(key) > 60000 &&
-                        legalOperationCacheCount.get(key) < 10) {
+                if (!legalOperationCacheCount.containsKey(key) || !legalOperationCacheTime.containsKey(key)) {
+                    legalOperationCache.remove(key);
+                    legalOperationCacheCount.remove(key);
+                    legalOperationCacheTime.remove(key);
+                } else if (legalOperationCacheCount.get(key) < 10 &&
+                        System.currentTimeMillis() - legalOperationCacheTime.get(key) > 60000) {
                     legalOperationCache.remove(key);
                     legalOperationCacheCount.remove(key);
                     legalOperationCacheTime.remove(key);
@@ -1663,7 +1671,11 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
         try {
             List<String> keysToRemove = new ArrayList<>(chainCache.keySet());
             for (String key : keysToRemove) {
-                if (System.currentTimeMillis() - chainCacheTime.get(key) > 60000 &&
+                if (!chainCacheCount.containsKey(key) || !chainCacheTime.containsKey(key)) {
+                    chainCache.remove(key);
+                    chainCacheCount.remove(key);
+                    chainCacheTime.remove(key);
+                } else if (System.currentTimeMillis() - chainCacheTime.get(key) > 60000 &&
                         chainCacheCount.get(key) < 10) {
                     chainCache.remove(key);
                     chainCacheCount.remove(key);
