@@ -144,6 +144,8 @@ public class LockedChessCentre {
         public void writeToRecord();
 
         public boolean getProtect();
+
+        public boolean getPeace();
     }
 
     public static final class AllRecords {
@@ -722,6 +724,11 @@ public class LockedChessCentre {
         @Override
         public boolean getProtect() {
             return writerLockedChess.getProtect();
+        }
+
+        @Override
+        public boolean getPeace() {
+            return writerLockedChess.getPeace();
         }
     }
 
@@ -1481,7 +1488,7 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
         try {
             inDfs = true;
             if (chainCache.containsKey(returnGame())) {
-                return chainCache.get(returnGame());
+                return new ArrayList<>(chainCache.get(returnGame()));
             }
             String initialState = returnGame();
             int requiredSteps = 6 - operationNumber;
@@ -1732,6 +1739,9 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
             startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             timeString = new StringBuilder();
             lastOperationTime = System.currentTimeMillis();
+            inDfs = false;
+            isProtected = false;
+            inPeace = false;
         } finally {
             lock.unlock();
         }
@@ -1765,6 +1775,15 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
             if (isProtected || isEnd(operationString.toString())) {
                 return;
             }
+            if (operation == null) {
+                throw new IllegalOperationError("Operation cannot be null");
+            }
+            if ((operation instanceof String) && (operation.equals('f')
+                    || operation.equals('o') || operation.equals('p') || operation.equals('y')
+                    || operation.equals('n'))) {
+                handleOtherOperation((String) operation);
+                return;
+            }
             super.startOperation(operation);
             if (!inDfs) {
                 if ((getOperationOppsite().equals("黑") && getOperationNumber() != 1)
@@ -1776,7 +1795,8 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
 
                 switch (operation) {
                     case LockedChess.ChessPiece chessPiece ->
-                        operationString.append(dictMap.get(chessPiece.getX())).append(dictMap.get(chessPiece.getY()));
+                        operationString.append(dictMap.get(((ChessPiece) chessPiece).getX()))
+                                .append(dictMap.get(((ChessPiece) chessPiece).getY()));
                     case String string -> {
                         if (getOperationNumber() == 4) {
                             String[] parts = string.split(",");
@@ -1788,16 +1808,9 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
                     default ->
                         throw new IllegalOperationError("Invalid operation type");
                 }
-                operationString.append("#");
-                long nextOperationTime = System.currentTimeMillis();
-                timeString.append(
-                        String.format("%.3f", (double) (nextOperationTime - lastOperationTime) / 1000.0))
-                        .append("#");
-                boardString.append('#').append(return_game());
-                lastOperationTime = nextOperationTime;
+                normalWrite();
                 if (legalOperation().isEmpty()) {
-                    String endTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    timeString.append(startTime).append('$').append(endTime);
+                    endWrite();
                     if (getOperationOppsite().equals("黑")) {
                         operationString.append("ww");
                     } else {
@@ -1805,6 +1818,86 @@ class WriterLockedChess extends LockedChess implements LockedChessCentre.WriterL
                     }
                 }
             }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void endWrite() {
+        String endTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        timeString.append(startTime).append('$').append(endTime);
+    }
+
+    private void normalWrite() {
+        operationString.append("#");
+        long nextOperationTime = System.currentTimeMillis();
+        timeString.append(
+                String.format("%.3f", (double) (nextOperationTime - lastOperationTime) / 1000.0))
+                .append("#");
+        boardString.append('#').append(return_game());
+        lastOperationTime = nextOperationTime;
+    }
+
+    private boolean inPeace = false;
+
+    private void handleOtherOperation(String x) {
+        switch (x) {
+            case "f" -> {
+                if (getOperationOppsite().equals("黑")) {
+                    operationString.append("bf");
+                } else {
+                    operationString.append("wf");
+                }
+                endWrite();
+            }
+            case "o" -> {
+                if (getOperationOppsite().equals("黑")) {
+                    operationString.append("bo");
+                } else {
+                    operationString.append("wo");
+                }
+                endWrite();
+            }
+            case "p" -> {
+                if (getOperationOppsite().equals("黑")) {
+                    operationString.append("bp");
+                } else {
+                    operationString.append("wp");
+                }
+                normalWrite();
+                inPeace = true;
+            }
+            case "y" -> {
+                if (!inPeace) {
+                    throw new IllegalOperationError("You can't use 'y' before 'p'.");
+                }
+                operationString.append("pp");
+                endWrite();
+                inPeace = false;
+            }
+            case "n" -> {
+                if (!inPeace) {
+                    throw new IllegalOperationError("You can't use 'n' before 'p'.");
+                }
+                if (getOperationOppsite().equals("黑")) {
+                    operationString.append("wn");
+                } else {
+                    operationString.append("bn");
+                }
+                normalWrite();
+                inPeace = false;
+            }
+            default -> {
+                throw new AssertionError();
+            }
+        }
+    }
+
+    @Override
+    public boolean getPeace() {
+        lock.lock();
+        try {
+            return inPeace;
         } finally {
             lock.unlock();
         }
