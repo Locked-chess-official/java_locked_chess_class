@@ -143,6 +143,8 @@ Custom exceptions for game errors:
 2. Players move pieces in specific directions ("u", "d", "l", "r")
 3. Movement is constrained by board boundaries and opponent pieces
 4. The game ends when a player cannot make a legal move
+5. In `WriterLockedChess`, the players can operation "f"\(declare failed\), "o"\(out of time\), "p"\(request for peace\), "y"\(agree to peace\) and "n"\(not agree to peace\)
+6. When operation number is 4, players can operation "c" to withdraw the choice of the piece 
 
 ## JSON Format
 Game state is represented as JSON with:
@@ -163,3 +165,4 @@ Game state is represented as JSON with:
 
 - Fix some bug.
 - `WriterLockedChess` now support more operations.
+- Sure the thread safety of the cache.
