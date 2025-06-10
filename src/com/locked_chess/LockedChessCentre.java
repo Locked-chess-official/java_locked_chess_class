@@ -18,131 +18,186 @@ import org.json.JSONTokener;
 public class LockedChessCentre {
     public static interface LockedChessAllInterface {
         // 开始游戏的方法
+        // Starts the game
         public void gameStart();
 
         // 同gameStart方法
+        // Starts the game, same as gameStart method
         public void game_start();
 
         // 返回一个Object类型的列表，表示合法的操作
+        // Returns a list of Object type, representing legal operations
         public List<Object> legalOperation();
 
         // 同legalOperation方法
+        // Returns a list of Object type, representing legal operations, same as
+        // legalOperation method
         public List<Object> legal_operation();
 
         // 开始操作，参数为x
+        // Starts the operation, with parameter x
         public void startOperation(Object x);
 
         // 同startOperation方法
+        // Starts the operation, with parameter x
         public void operation(Object x);
 
         // 返回游戏完整状态信息
+        // Returns the complete game state information
         public String returnGame();
 
         // 同returnGame方法
+        // Returns the complete game state information, same as returnGame method
         public String return_game();
 
         // 加载游戏状态，参数为x和restart_game，其中restart_game表示是否重启游戏，x为String类型
+        // Loads the game state, with parameters x and restart_game, where restart_game
+        // indicates whether to restart the game, and x is of type String
         public void loadsGame(String x, boolean restart_game);
 
         // 同loadsGame方法
+        // Loads the game state, with parameters x and restart_game, where restart_game
+        // indicates whether to restart the game, and x is of type String
         public void loads_game(String x, boolean restart_game);
 
         // 加载游戏状态，参数为x，不重启游戏
+        // Loads the game state, with parameter x, without restarting the game
         public void loadsGame(String x);
 
         // 同loadsGame方法，不重启游戏
+        // Loads the game state, without restarting the game, with parameter x
         public void loads_game(String x);
 
         // 加载游戏状态，参数为x和restart_game，其中restart_game表示是否重启游戏，x为JSONObject类型
+        // Loads the game state, with parameters x and restart_game, where restart_game
+        // indicates whether to restart the game, and x is of type JSONObject
         public void loadsGame(JSONObject x, boolean restart_game);
 
         // 同loadsGame方法，参数为x和restart_game，其中restart_game表示是否重启游戏，x为JSONObject类型
+        // Loads the game state, with parameters x and restart_game, where restart_game
+        // indicates whether to restart the game, and x is of type JSONObject
         public void loads_game(JSONObject x, boolean restart_game);
 
         // 加载游戏状态，参数为x，不重启游戏，x为JSONObject类型
+        // Loads the game state, with parameter x, without restarting the game, where x
+        // is of type JSONObject
         public void loadsGame(JSONObject x);
 
         // 同loadsGame方法，不重启游戏，x为JSONObject类型
+        // Loads the game state, without restarting the game, with parameter x, where x
+        // is of type JSONObject
         public void loads_game(JSONObject x);
 
         // 计算所有可能的操作链。机器应该选择一个链执行链中全部操作
+        // Calculate all possible operation chains. The robot should choose one chain to
+        // execute all operations in the chain
         public List<List<Object>> calculateAllChains();
 
         // 同calculateAllChains方法
+        // Calculate all possible operation chains, same as calculateAllChains method
         public List<List<Object>> calculate_all_chains();
 
         // 判断两个操作链是否等效
+        // Returns whether two operation chains are equal
         public boolean isEqualChain(List<Object> chain1, List<Object> chain2);
 
         // 同isEqualChain方法
+        // Returns whether two operation chains are equal, same as isEqualChain method
         public boolean is_equal_chain(List<Object> chain1, List<Object> chain2);
 
         // 返回游戏棋子集合
+        // Returns the set of chess pieces in the game
         public Set<LockedChess.ChessPiece> getGame();
 
         // 同getGame方法
+        // Returns the set of chess pieces in the game, same as getGame method
         public Set<LockedChess.ChessPiece> get_game();
 
         // 返回操作序数
+        // Returns the operation number
         public int getOperationNumber();
 
         // 同getOperationNumber方法
+        // Returns the operation number, same as getOperationNumber method
         public int get_operation_number();
 
         // 返回操作方
+        // Returns the operation side
         public String getOperationOppsite();
 
         // 同getOperationOppsite方法
+        // Returns the operation side, same as getOperationOppsite method
         public String get_operation_oppsite();
 
         // 返回当前选择的棋子
+        // Returns the currently chosen chess piece
         public LockedChess.ChessPiece getChooseChessLocate();
 
         // 同getChooseChessLocate方法
+        // Returns the currently chosen chess piece, same as getChooseChessLocate method
         public LockedChess.ChessPiece get_choose_chess_locate();
 
         // 返回上一步操作的方向（仅限“上下”或“左右”，且仅getOperationNumber为2或5时显示）
+        // Returns the last operation direction (only "up" or "down" or "left" or
+        // "right", and only displayed when getOperationNumber is 2 or 5)
         public String getOperationLastDirection();
 
         // 同getOperationLastDirection方法
+        // Returns the last operation direction, same as getOperationLastDirection
+        // method
         public String get_operation_last_direction();
 
         // 返回当前所有可行操作
+        // Returns all possible operations
         public List<Object> getAllOperation();
 
         // 同getAllOperation方法
+        // Returns all possible operations, same as getAllOperation method
         public List<Object> get_all_operation();
 
         // 返回当前是否已经操作过
+        // Returns whether the game has been operated
         public boolean getHasOperated();
 
         // 同getHasOperated方法
+        // Returns whether the game has been operated, same as getHasOperated method
         public boolean get_has_operated();
 
         // 上锁(必须与unlockGame方法配对使用，应该将unlockGame方法放在finally中)
+        // Lock the game (must be paired with unlockGame method, should put unlockGame
+        // method in finally block)
         public void lockGame();
 
         // 解锁(必须先调用lockGame方法，且必须在finally中调用)
+        // Unlocked the game (must be called after lockGame method, and must be called
+        // in finally block)
         public void unlockGame();
     }
 
     public static interface WriterLockedChessAllInterface extends LockedChessAllInterface {
         // 设置保护
+        // Protect the game
         public void setProtect();
 
         // 取消保护
+        // Unprotect the game
         public void setUnprotect();
 
         // 同getFinalResult方法
+        // Returns the final result, same as getFinalResult method
         public String get_final_result();
 
         // 返回最终结果
+        // Returns the final result
         public String getFinalResult();
 
         // 将当前游戏记录写入记录文件，参数为name，表示本局名称
+        // Write the current game record to the record file, with name as the name of
+        // this game
         public void writeToRecord(String name);
 
         // 将当前游戏记录写入记录文件，不指定名称
+        // Write the current game record to the record file, without specifying a name
         public void writeToRecord();
 
         public boolean getProtect();
@@ -155,6 +210,7 @@ public class LockedChessCentre {
 
         public static void addRecord(WriterLockedChessAllInterface writerLockedChess, String name) {
             // 从指定游戏中添加记录，名字为name
+            // Add record from the specified game, name is name
             String recordTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             JSONObject json = new JSONObject(writerLockedChess.get_final_result());
             json.put("name", name);
@@ -163,11 +219,13 @@ public class LockedChessCentre {
 
         public static void addRecord(WriterLockedChessAllInterface writerLockedChess) {
             // 从指定游戏中添加记录，名字为空
+            // Add record from the specified game, name is empty
             addRecord(writerLockedChess, "");
         }
 
         public static void writeRecords(String filePath) throws IOException {
             // 将所有记录写入文件，文件名为filePath
+            // Write all records to file, file name is filePath
             try (FileWriter writer = new FileWriter(filePath)) {
                 writer.write(allRecords.toString(2));
             } catch (IOException e) {
@@ -177,6 +235,7 @@ public class LockedChessCentre {
 
         public static void readRecords(String filePath) throws IOException {
             // 从文件中读取所有记录，文件名为filePath
+            // Read all records from file, file name is filePath
             try (FileReader reader = new FileReader(filePath)) {
                 JSONTokener tokener = new JSONTokener(reader);
                 allRecords = new JSONObject(tokener);
@@ -188,6 +247,7 @@ public class LockedChessCentre {
 
         public static void deleteRecord(String recordTime, boolean isTime) {
             // 删除指定时间戳的记录
+            // Delete the record with the specified timestamp
             if (isTime) {
                 allRecords.remove(recordTime);
             } else {
@@ -211,26 +271,8 @@ public class LockedChessCentre {
         private static final ReentrantReadWriteLock getRecordCacheLock = new ReentrantReadWriteLock();
 
         static void clearReadRecordsCache() {
-            getRecordCacheLock.writeLock().lock();
-            getRecordsCacheLock.writeLock().lock();
-            try {
-                List<String> keysToRemove = new ArrayList<>(getRecordsCache.keySet());
-                for (String key : keysToRemove) {
-                    if (!getRecordsCacheCount.containsKey(key) || !getRecordsCacheTime.containsKey(key)) {
-                        getRecordsCache.remove(key);
-                        getRecordsCacheCount.remove(key);
-                        getRecordsCacheTime.remove(key);
-                    } else if (getRecordsCacheCount.get(key) < 10 && System.currentTimeMillis()
-                            - getRecordsCacheTime.get(key) > 60000) {
-                        getRecordsCache.remove(key);
-                        getRecordsCacheCount.remove(key);
-                        getRecordsCacheTime.remove(key);
-                    }
-                }
-            } finally {
-                getRecordCacheLock.writeLock().unlock();
-                getRecordsCacheLock.writeLock().unlock();
-            }
+            CacheCleaner.cleanAnyCache(getRecordsCache, getRecordsCacheCount, getRecordsCacheTime,
+                    getRecordsCacheLock, getRecordCacheLock);
         }
 
         public static String readRecord(String boardRecord, String operationRecord, String timeRecord) {
@@ -319,16 +361,13 @@ public class LockedChessCentre {
         }
     }
 
-    public static void clearReadRecordsCache() {
-        AllRecords.clearReadRecordsCache();
-    }
-
     public static final class OtherRecords {
         private static JSONObject otherRecords = new JSONObject();
         private static boolean hasCombined = false;
 
         public static void readRecords(String filePath) throws IOException {
             // 从文件中读取其他记录，文件名为filePath
+            // Read other records from file, file name is filePath
             try (FileReader reader = new FileReader(filePath)) {
                 JSONTokener tokener = new JSONTokener(reader);
                 otherRecords = new JSONObject(tokener);
@@ -353,12 +392,17 @@ public class LockedChessCentre {
 
     public static interface LockedChessRobotAllInterface {
         // 设置需要分析的游戏
+        // Set the game to be analyzed
         public void setGame(LockedChessAllInterface writerLockedChess);
 
         // 获取一个操作链，机器人会选择一个操作链执行
+        // Get an operation chain, the robot will choose an operation chain to execute
         public List<Object> getOperation();
 
         // 获取一个操作链，机器人会选择一个操作链执行。若usebetter为true，则会选择更好的操作链，否则执行的是最差的操作链
+        // Get an operation chain, the robot will choose an operation chain to execute.
+        // If usebetter is true, it will choose a better operation chain, otherwise it
+        // will execute the worst operation chain
         public List<Object> getBetterOperation(boolean usebetter);
     }
 
@@ -373,12 +417,15 @@ public class LockedChessCentre {
         public String toString();
 
         // 返回棋子的x坐标
+        // returns the x coordinate of the chess piece
         public int getX();
 
         // 返回棋子的y坐标
+        // returns the y coordinate of the chess piece
         public int getY();
 
         // 返回棋子的颜色
+        // returns the color of the chess piece
         public String getColor();
     }
 
@@ -396,6 +443,10 @@ public class LockedChessCentre {
 
     public static class LockedChessClass implements LockedChessAllInterface {
         private final LockedChess lockedChessAllInterface = new LockedChess();
+
+        public LockedChessClass() {
+            lockedChessAllInterface.gameStart();
+        }
 
         @Override
         public void gameStart() {
@@ -580,6 +631,10 @@ public class LockedChessCentre {
 
     public static class WriterLockedChessClass implements WriterLockedChessAllInterface {
         private final WriterLockedChess writerLockedChess = new WriterLockedChess();
+
+        public WriterLockedChessClass() {
+            writerLockedChess.gameStart();
+        }
 
         @Override
         public void gameStart() {
@@ -803,22 +858,68 @@ public class LockedChessCentre {
     }
 
     // 创建一个ChessPiece对象，传入x、y坐标和颜色
+    // Create a ChessPiece object, passing in x, y coordinates and color
     public static ChessPiece ChessPieceClass(int x, int y, String color) {
         // 返回一个LockedChess.ChessPiece对象，传入x、y坐标和颜色
+        // return new LockedChess.ChessPiece(x, y, color);
         return new LockedChess.ChessPiece(x, y, color);
     }
 
     // 为机器人设置游戏
+    // Set the game for the robot
     public static void setGame(LockedChessAllInterface writerLockedChess) {
         robot.setGame(writerLockedChess);
     }
 
-    public static void cleanLegalOperationCache() {
-        LockedChess.cleanLegalOperationCache();
-    }
+    public static class CacheCleaner {
+        private static final ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
+        private static final ReentrantReadWriteLock cacheCountLock = new ReentrantReadWriteLock();
 
-    public static void cleanChainCache() {
-        LockedChess.cleanChainCache();
+        public static void cleanAnyCache(Map<String, ?> cache, Map<String, Integer> cacheCount,
+                Map<String, Long> cacheTime) {
+            cleanAnyCache(cache, cacheCount, cacheTime, cacheLock, cacheCountLock);
+        }
+
+        public static void cleanAnyCache(Map<String, ?> cache, Map<String, Integer> cacheCount,
+                Map<String, Long> cacheTime,
+                ReentrantReadWriteLock cacheLock, ReentrantReadWriteLock cacheCountLock) {
+            // 清理缓存, 最好选择每60秒清理一次
+            // Better to choose to clean every 60 seconds
+            cacheLock.writeLock().lock();
+            cacheCountLock.writeLock().lock();
+            try {
+                List<String> keysToRemove = new ArrayList<>(cache.keySet());
+                for (String key : keysToRemove) {
+                    if (!cacheCount.containsKey(key) || !cacheTime.containsKey(key)) {
+                        cache.remove(key);
+                        cacheCount.remove(key);
+                        cacheTime.remove(key);
+                    } else if (cacheCount.get(key) < 10 && System.currentTimeMillis() - cacheTime.get(key) > 60000) {
+                        cache.remove(key);
+                        cacheCount.remove(key);
+                        cacheTime.remove(key);
+                    } else {
+                        cacheCount.put(key, (cacheCount.get(key) - 1 > 0) ? cacheCount.get(key) - 1 : 1);
+                        cacheTime.put(key, System.currentTimeMillis());
+                    }
+                }
+            } finally {
+                cacheCountLock.writeLock().unlock();
+                cacheLock.writeLock().unlock();
+            }
+        }
+
+        public static void cleanRecordsCache() {
+            AllRecords.clearReadRecordsCache();
+        }
+
+        public static void cleanLegalOperationCache() {
+            LockedChess.cleanLegalOperationCache();
+        }
+
+        public static void cleanChainCache() {
+            LockedChess.cleanChainCache();
+        }
     }
 }
 
@@ -960,26 +1061,8 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     private static final ReentrantReadWriteLock legalOperationCacheLock = new ReentrantReadWriteLock();
 
     static void cleanLegalOperationCache() {
-        legalOperationCacheLock.writeLock().lock();
-        legalOperationCacheCountLock.writeLock().lock();
-        try {
-            List<String> keysToRemove = new ArrayList<>(legalOperationCache.keySet());
-            for (String key : keysToRemove) {
-                if (!legalOperationCacheCount.containsKey(key) || !legalOperationCacheTime.containsKey(key)) {
-                    legalOperationCache.remove(key);
-                    legalOperationCacheCount.remove(key);
-                    legalOperationCacheTime.remove(key);
-                } else if (legalOperationCacheCount.get(key) < 10 &&
-                        System.currentTimeMillis() - legalOperationCacheTime.get(key) > 60000) {
-                    legalOperationCache.remove(key);
-                    legalOperationCacheCount.remove(key);
-                    legalOperationCacheTime.remove(key);
-                }
-            }
-        } finally {
-            legalOperationCacheCountLock.writeLock().unlock();
-            legalOperationCacheLock.writeLock().unlock();
-        }
+        LockedChessCentre.CacheCleaner.cleanAnyCache(legalOperationCache, legalOperationCacheCount,
+                legalOperationCacheTime, legalOperationCacheLock, legalOperationCacheCountLock);
     }
 
     // Get legal operations
@@ -1666,26 +1749,8 @@ class LockedChess implements LockedChessCentre.LockedChessAllInterface {
     private static final ReentrantReadWriteLock chainCacheLock = new ReentrantReadWriteLock();
 
     static void cleanChainCache() {
-        chainCacheLock.writeLock().lock();
-        chainCacheCountLock.writeLock().lock();
-        try {
-            List<String> keysToRemove = new ArrayList<>(chainCache.keySet());
-            for (String key : keysToRemove) {
-                if (!chainCacheCount.containsKey(key) || !chainCacheTime.containsKey(key)) {
-                    chainCache.remove(key);
-                    chainCacheCount.remove(key);
-                    chainCacheTime.remove(key);
-                } else if (System.currentTimeMillis() - chainCacheTime.get(key) > 60000 &&
-                        chainCacheCount.get(key) < 10) {
-                    chainCache.remove(key);
-                    chainCacheCount.remove(key);
-                    chainCacheTime.remove(key);
-                }
-            }
-        } finally {
-            chainCacheCountLock.writeLock().unlock();
-            chainCacheLock.writeLock().unlock();
-        }
+        LockedChessCentre.CacheCleaner.cleanAnyCache(chainCache, chainCacheCount, chainCacheTime, chainCacheLock,
+                chainCacheCountLock);
     }
 
     @Override
