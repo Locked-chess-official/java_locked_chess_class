@@ -135,7 +135,7 @@ Represents a chess piece with:
 - `String getColor()`: Get the color
 
 ### 5. Cache Manager
-Some methods use cache to speed up. The add of the cache is automatic, but the clean should be manual.
+Some methods use cache to speed up. The add of the cache is automatic in the module, but the clean method should not be called in it.
 The cache will be clear if the used count is below 10 and the time of last using is above 60 seconds.
 In your project, better to clean the cache per 60 seconds.
 #### CacheCleaner
