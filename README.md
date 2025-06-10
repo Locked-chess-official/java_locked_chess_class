@@ -136,10 +136,16 @@ Represents a chess piece with:
 
 ### 5. Cache Manager
 Some methods use cache to speed up. The add of the cache is automatic, but the clean should be manual.
-The cache will be clear if the used count is below 10 and the time of last using is above 60 seconds. 
-- `void clearReadRecordsCache()`: Clean the cache of `AllRecords.readRecord`
+The cache will be clear if the used count is below 10 and the time of last using is above 60 seconds.
+In your project, better to clean the cache per 60 seconds.
+#### CacheCleaner
+- `void cleanReadRecordsCache()`: Clean the cache of `AllRecords.readRecord`
 - `void cleanLegalOperationCache()`: Clean the cache of `LockedChess.legalOperation`
 - `void cleanChainCache()`: Clean the cache of `LockedChess.calculateAllChains`
+- `void cleanAnyCache(Map<String, ?> cache, Map<String, Integer> cacheCount, Map<String, Long> cacheTime, ReentrantReadWriteLock cacheLock, ReentrantReadWriteLock cacheCountLock)`:
+  Clean your cache with the count of cache, the time of the cache and your lock.
+- `void cleanAnyCache(Map<String, ?> cache, Map<String, Integer> cacheCount, Map<String, Long> cacheTime)`:
+  Clean your cache, but with the private lock in CacheCleaner.
 
 ### 6. Exception Classes
 Custom exceptions for game errors:
