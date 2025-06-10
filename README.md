@@ -143,9 +143,9 @@ In your project, better to clean the cache per 60 seconds.
 - `void cleanLegalOperationCache()`: Clean the cache of `LockedChess.legalOperation`
 - `void cleanChainCache()`: Clean the cache of `LockedChess.calculateAllChains`
 - `void cleanAnyCache(Map<String, ?> cache, Map<String, Integer> cacheCount, Map<String, Long> cacheTime, ReentrantReadWriteLock cacheLock, ReentrantReadWriteLock cacheCountLock)`:
-  Clean your cache with the count of cache, the time of the cache and your lock.
+  Clean your cache with the count of cache, the time of the cache and your locks.
 - `void cleanAnyCache(Map<String, ?> cache, Map<String, Integer> cacheCount, Map<String, Long> cacheTime)`:
-  Clean your cache, but with the private lock in CacheCleaner.
+  Clean your cache, but with the private locks in CacheCleaner.
 
 ### 6. Exception Classes
 Custom exceptions for game errors:
